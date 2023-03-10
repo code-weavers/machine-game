@@ -11,13 +11,14 @@ export enum MachineTier {
 }
 
 export type Machine = {
-  id: number;
+  id: string;
   name: string;
   image: string;
   durability: number;
 
   energyCost: number;
   pollutionProduction: number;
+  employeeSlots: number;
 
   resourceProduction: number;
   type: MachineType;

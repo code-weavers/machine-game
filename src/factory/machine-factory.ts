@@ -34,15 +34,19 @@ export class MachineFactory {
   }
 
   public mintMachine(): GameMachine {
+    const durability = this.getDurability();
+
     return {
       id: randomUtils.generateUniqueId(),
-      currentDurability: 100,
-      durability: this.getDurability(),
+      currentDurability: durability,
+      durability: durability,
       energyCost: this.getEnergyCost(),
       pollutionProduction: this.getPollutionProduction(),
       resourceProduction: this.getResourceProduction(),
       image: "https://picsum.photos/200",
       name: "Machine 1",
+      assignedEmployee: [],
+      employeeSlots: this.machineTier * 2,
       tier: this.machineTier,
       type: MachineType.Press,
     };
