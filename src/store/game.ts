@@ -105,7 +105,6 @@ export const useGameStore = create(
         set({
           selectedLand: {
             ...land,
-
             nextPaymentDate: numberNextDate,
           },
         });

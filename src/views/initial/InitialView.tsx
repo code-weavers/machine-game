@@ -1,30 +1,35 @@
 import { lands } from "@/data/lands";
 import { useGameStore } from "@/store/game";
-import { Button, Card, SimpleGrid } from "@mantine/core";
+import { Card, Center, Title } from "@mantine/core";
 import { GameView } from "../game/GameView";
 
 export const InitialView = () => {
   const land = useGameStore((select) => select.selectedLand);
+  // todo create game page
   const selectLand = useGameStore((select) => select.setSelectedLand);
 
   if (land) return <GameView />;
 
   return (
-    <div>
-      <SimpleGrid cols={3}>
-        {lands.map((item) => (
-          <Button key={item.id} onClick={() => selectLand(item)}>
-            <Card
-              sx={{
-                border: "1px solid #000",
-              }}
-            >
-              <Card.Section>{item.name}</Card.Section>
-              <Card.Section>Fee: {item.fee}</Card.Section>
-            </Card>
-          </Button>
-        ))}
-      </SimpleGrid>
-    </div>
+    <Center h={"100vh"}>
+      {lands.map((item) => (
+        <Card
+          key={item.id}
+          onClick={() => selectLand(item)}
+          sx={{
+            border: "1px solid #000",
+            padding: 40,
+            cursor: "pointer",
+            background: "#eee",
+          }}
+        >
+          <Title>{item.name}</Title>
+
+          <Title size="md" mt={"md"}>
+            Fee: ${item.fee}
+          </Title>
+        </Card>
+      ))}
+    </Center>
   );
 };

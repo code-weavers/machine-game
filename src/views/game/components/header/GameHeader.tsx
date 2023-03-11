@@ -1,8 +1,9 @@
-import { MoneyCounter } from "@/components/core/money-counter/MoneyCounter";
+import { ValueCard } from "@/components/cards/value-card/ValueCard";
 import { PayLand } from "@/components/core/pay-land/PayLand";
+import { SpeedButton } from "@/components/core/speed-button/SpeedButton";
 import { MachineEntity } from "@/domain/machine.domain";
 import { useGameStore } from "@/store/game";
-import { Button } from "@mantine/core";
+import { Button, Flex } from "@mantine/core";
 
 interface Props {
   resetGame: () => void;
@@ -11,26 +12,35 @@ interface Props {
 export const GameHeader = ({ resetGame }: Props) => {
   const { machines, money, pollution } = useGameStore();
 
+  const moneyPerSecond = machines.reduce((acc, machine) => {
+    const domain = new MachineEntity(machine);
+
+    if (!domain.isWorking) return acc;
+
+    return acc + domain.virtualResourceProduction;
+  }, 0);
+
   return (
-    <header style={{ display: "flex" }}>
-      <MoneyCounter money={money} />
-      <div>
-        Money per second:
-        {machines.reduce((acc, machine) => {
-          const domain = new MachineEntity(machine);
+    <header style={{ display: "flex", marginBottom: "1rem" }}>
+      <Flex>
+        <ValueCard prefix="$ " label="Money 💰" value={money}></ValueCard>
 
-          if (!domain.isWorking) return acc;
+        <ValueCard
+          prefix="$ "
+          label="Money per second 💰"
+          suffix="/s"
+          value={moneyPerSecond}
+        />
 
-          return acc + domain.virtualResourceProduction;
-        }, 0)}
-      </div>
-      <div>
-        Polution:
-        {pollution}
-      </div>
+        <ValueCard label="Pollution ☠" value={pollution} />
 
-      <PayLand />
-      <Button onClick={resetGame}>Reset Game</Button>
+        <PayLand />
+      </Flex>
+
+      <Flex ml={"auto"} gap="sm">
+        <Button onClick={resetGame}>Reset Game</Button>
+        <SpeedButton />
+      </Flex>
     </header>
   );
 };

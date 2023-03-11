@@ -1,3 +1,4 @@
+import { ValueCard } from "@/components/cards/value-card/ValueCard";
 import { useGameStore } from "@/store/game";
 import { Button } from "@mantine/core";
 import { useEffect, useState } from "react";
@@ -5,33 +6,44 @@ import { useEffect, useState } from "react";
 export const PayLand = () => {
   const selectedLand = useGameStore((select) => select.selectedLand);
   const payLandFee = useGameStore((select) => select.payLandFee);
-  const [timer, setTimer] = useState(0);
+  const [timer, setTimer] = useState(getSeconds());
+
+  function getSeconds() {
+    if (!selectedLand) return 0;
+
+    const time = selectedLand.nextPaymentDate - new Date().getTime();
+    const seconds = Math.floor(time / 1000);
+
+    return seconds;
+  }
 
   useEffect(() => {
-    if (!selectedLand) return;
-
     const interval = setInterval(() => {
-      const time = selectedLand.nextPaymentDate - new Date().getTime();
-      const seconds = Math.floor(time / 1000);
-      setTimer(seconds);
+      setTimer(getSeconds());
     }, 1000);
 
     return () => clearInterval(interval);
+
+    // ok lele, tu ganhou
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedLand]);
 
   if (!selectedLand) return null;
 
   return (
-    <div>
-      <span>
-        {selectedLand.name} - {selectedLand.fee}
-      </span>
-
-      {timer <= 0 ? (
-        <Button onClick={() => payLandFee()}>Pay fee</Button>
-      ) : (
-        <span>Payed until: {timer} seconds</span>
-      )}
-    </div>
+    <ValueCard
+      label={`${selectedLand.name}`}
+      value={timer <= 0 ? 0 : timer}
+      prefix="Next pay in "
+      suffix={
+        timer <= 0 ? (
+          <Button ml={"md"} onClick={() => payLandFee()}>
+            Pay fee ${selectedLand.fee}
+          </Button>
+        ) : (
+          " seconds"
+        )
+      }
+    />
   );
 };

@@ -12,7 +12,7 @@ const useStyles = createStyles((theme) => ({
         ? theme.colors.dark[7]
         : theme.colors.blue[8],
     borderRadius: theme.radius.md,
-    border: `8px solid ${theme.colors.orange[2]}`,
+    border: `4px dashed ${theme.colors.orange[2]}`,
   },
 }));
 
