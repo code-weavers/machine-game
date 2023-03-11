@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from "uuid";
+
 const getRandomNumber = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
@@ -15,12 +17,8 @@ const generateRandomName = () => {
 };
 
 const generateUniqueId = () => {
-  return crypto.randomUUID();
+  return uuidv4();
 };
-
-function generateNumberBetween1And10001() {
-  return Math.floor(Math.random() * 10001);
-}
 
 export const randomUtils = {
   getRandomNumber,

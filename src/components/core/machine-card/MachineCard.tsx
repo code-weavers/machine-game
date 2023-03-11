@@ -36,12 +36,19 @@ export const MachineCard = ({ machine }: Props) => {
     ? "orange"
     : "green";
 
+  const borderWidth = machine.isWorking
+    ? machine.employeeSlots === machine.assignedEmployee.length
+      ? "8"
+      : "3"
+    : "5";
+
   return (
     <Card
       shadow="sm"
       padding="sm"
       sx={() => ({
-        border: `5px solid ${borderColor}}`,
+        borderRadius: 16,
+        border: `${borderWidth}px solid ${borderColor}}`,
       })}
     >
       <Header />

@@ -1,27 +1,55 @@
-import { randomUtils } from "@/utils/random";
+import { MachineDomain } from "@/domain/machine.domain";
 import { MachineFactory } from "@/factory/machine-factory";
 import { Employee } from "@/types/entities/employee";
+import { Land } from "@/types/entities/land";
 import { Machine, MachineTier } from "@/types/entities/machine";
+import { dateUtils } from "@/utils/date";
+import { randomUtils } from "@/utils/random";
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import { MachineDomain } from "@/domain/machine.domain";
+import { createJSONStorage, persist } from "zustand/middleware";
+
+export type GameLand = Land & {
+  nextPaymentDate: number;
+};
 
 export interface GameMachine extends Machine {
   currentDurability: number;
   assignedEmployee: Employee[];
 }
 
+export type RepairBot = {
+  id: string;
+  name: string;
+  repairPercentage: number;
+  secondsInterval: number;
+};
+
+export type GameRepairBot = RepairBot & {
+  availableAt: number;
+};
+
 interface Store {
+  selectedLand: GameLand | null;
   money: number;
   machines: GameMachine[];
+  gameSpeedMs: number;
   pollution: number;
+
+  repairBots: GameRepairBot[];
+
   employees: Employee[];
+
+  setGameSpeedMs: (gameSpeed: number) => void;
+
+  buyRepairBot: (repairBot: RepairBot) => void;
+  payLandFee: () => void;
   gameTick: () => void;
   mintMachine: () => void;
   mintEmployee: () => void;
   repairMachine: (machineId: string) => void;
   assignEmployees: (machineId: string, employeeId: string | string[]) => void;
   availableEmployees: () => Employee[];
+  setSelectedLand: (land: Land) => void;
 }
 
 const DURABILITY_DRAIN = 5;
@@ -33,14 +61,91 @@ const EMPLOYEE_MIN_COST = 100;
 export const useGameStore = create(
   persist<Store>(
     (set, get) => ({
+      repairBots: [],
       money: 500,
       machines: [],
       pollution: 0,
+      selectedLand: null,
+      gameSpeedMs: 1000,
+      setGameSpeedMs: (gameSpeed) => {
+        set({ gameSpeedMs: gameSpeed });
+      },
+
+      buyRepairBot: (repairBot) => {
+        set((state) => {
+          state.repairBots.push({
+            ...repairBot,
+            availableAt: new Date().getTime(),
+          });
+
+          return state;
+        });
+      },
+
+      payLandFee: () => {
+        set((state) => {
+          if (!state.selectedLand || state.money < state.selectedLand.fee) {
+            return state;
+          }
+
+          state.money -= state.selectedLand.fee;
+
+          const nextDate = dateUtils.addSeconds(new Date(), 30);
+
+          const numberNextDate = nextDate.getTime();
+
+          state.selectedLand.nextPaymentDate = numberNextDate;
+
+          return state;
+        });
+      },
+
+      setSelectedLand(land: Land) {
+        const nextDate = dateUtils.addMinutes(new Date(), 10);
+
+        const numberNextDate = nextDate.getTime();
+
+        set({
+          selectedLand: {
+            ...land,
+
+            nextPaymentDate: numberNextDate,
+          },
+        });
+      },
 
       gameTick: () => {
         set((state) => {
+          if (!state.selectedLand) return state;
+
+          if (state.selectedLand.nextPaymentDate - new Date().getTime() <= 0) {
+            return state;
+          }
+
           state.money += state.machines.reduce((acc, machine) => {
             const machineDomain = new MachineDomain(machine);
+
+            if (machineDomain.isBroken) {
+              const foundRepairBot = state.repairBots.find((repairBot) => {
+                return (
+                  repairBot.availableAt - new Date().getTime() <= 0 &&
+                  machineDomain.isBroken
+                );
+              });
+
+              if (foundRepairBot) {
+                const repairValue =
+                  foundRepairBot.repairPercentage * machine.durability;
+
+                console.log(repairValue);
+
+                machine.currentDurability += repairValue;
+
+                foundRepairBot.availableAt = dateUtils
+                  .addSeconds(new Date(), foundRepairBot.secondsInterval)
+                  .getTime();
+              }
+            }
 
             if (!machineDomain.isWorking) {
               return acc;
@@ -61,22 +166,24 @@ export const useGameStore = create(
       },
 
       mintMachine: () => {
+        if (get().machines.length + 1 > (get().selectedLand?.machineLimit || 0))
+          return;
+
         if (get().money < MACHINE_MIN_COST) {
           return;
-        } else {
-          set((state) => {
-            const machineFactory = new MachineFactory(MachineTier.Tier1);
-
-            const machine = machineFactory.mintMachine();
-
-            state.machines.push(machine);
-
-            return {
-              machines: state.machines,
-              money: state.money - MACHINE_MIN_COST,
-            };
-          });
         }
+        set((state) => {
+          const machineFactory = new MachineFactory(MachineTier.Tier1);
+
+          const machine = machineFactory.mintMachine();
+
+          state.machines.push(machine);
+
+          return {
+            machines: state.machines,
+            money: state.money - MACHINE_MIN_COST,
+          };
+        });
       },
 
       repairMachine: (machineId: string) => {
