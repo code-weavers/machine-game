@@ -1,5 +1,10 @@
-import { Box } from "@mantine/core";
+import { ContentCard } from "@/components/cards/content-card/ContentCard";
+import { Title } from "@mantine/core";
 
 export const Items = () => {
-  return <Box>Items</Box>;
+  return (
+    <ContentCard>
+      <Title color={"white"}>Items</Title>
+    </ContentCard>
+  );
 };

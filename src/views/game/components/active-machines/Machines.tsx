@@ -1,30 +1,24 @@
+import { ContentCard } from "@/components/cards/content-card/ContentCard";
 import { MachineCard } from "@/components/core/machine-card/MachineCard";
 import { MachineEntity } from "@/domain/machine.domain";
 import { useGameStore } from "@/store/game";
-import { Box, Flex } from "@mantine/core";
+import { SimpleGrid, Title } from "@mantine/core";
 
 export const ActiveMachines = () => {
   const machines = useGameStore((s) => s.machines);
   const selectedLand = useGameStore((s) => s.selectedLand);
 
   return (
-    <Box>
-      <section
-        style={{
-          marginBlock: 16,
-        }}
-      >
-        <h2>
-          Machines: {machines.length} / {selectedLand?.machineLimit}
-        </h2>
-      </section>
-      <Flex gap={"md"} wrap="wrap">
+    <ContentCard>
+      <Title mb={"md"} color="white">
+        Machines: {machines.length} / {selectedLand?.machineLimit}
+      </Title>
+
+      <SimpleGrid spacing={"md"} cols={4}>
         {machines.map((machine) => (
-          <div key={machine.id} style={{ width: 200 }}>
-            <MachineCard machine={new MachineEntity(machine)} />
-          </div>
+          <MachineCard key={machine.id} machine={new MachineEntity(machine)} />
         ))}
-      </Flex>
-    </Box>
+      </SimpleGrid>
+    </ContentCard>
   );
 };
