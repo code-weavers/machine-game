@@ -24,12 +24,22 @@ export const GameView = () => {
       <GameHeader resetGame={resetGame} />
       <Box className={classes.layout}>
         <ActiveMachines />
-        <Flex direction={`column`} gap="1rem">
-          <Employees />
-          <AvailableMachines />
-          <Items />
-          <GameSideMenu />
-        </Flex>
+        <aside
+          style={{
+            maxHeight: "100vh",
+            position: "sticky",
+            top: 0,
+            overflowY: "auto",
+            right: 0,
+          }}
+        >
+          <Flex direction={`column`} gap="1rem">
+            <Employees />
+            <AvailableMachines />
+            <Items />
+            <GameSideMenu />
+          </Flex>
+        </aside>
       </Box>
     </Flex>
   );

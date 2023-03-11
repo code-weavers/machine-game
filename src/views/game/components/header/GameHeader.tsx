@@ -22,7 +22,7 @@ export const GameHeader = ({ resetGame }: Props) => {
 
   return (
     <header style={{ display: "flex", marginBottom: "1rem" }}>
-      <Flex>
+      <Flex gap={"md"}>
         <ValueCard prefix="$ " label="Money 💰" value={money}></ValueCard>
 
         <ValueCard
