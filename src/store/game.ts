@@ -70,12 +70,15 @@ export const useGameStore = create(
 
       buyRepairBot: (repairBot) => {
         set((state) => {
-          state.repairBots.push({
-            ...repairBot,
-            availableAt: new Date().getTime(),
-          });
-
-          return state;
+          return {
+            repairBots: [
+              ...state.repairBots,
+              {
+                ...repairBot,
+                availableAt: new Date().getTime(),
+              },
+            ],
+          };
         });
       },
 
