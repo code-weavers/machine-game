@@ -2,6 +2,7 @@ import { theme } from "@/styles/theme";
 import { MantineProvider } from "@mantine/core";
 import type { AppProps } from "next/app";
 import Head from "next/head";
+import "../styles/globals.css";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (

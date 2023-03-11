@@ -1,3 +1,4 @@
+import { repairBotAnimation } from "@/animations/repair-bot-animation";
 import { MachineEntity } from "@/domain/machine.domain";
 import { MachineFactory } from "@/factory/machine-factory";
 import { Employee } from "@/types/entities/employee";
@@ -141,6 +142,8 @@ export const useGameStore = create(
                 foundRepairBot.availableAt = dateUtils
                   .addSeconds(new Date(), foundRepairBot.secondsInterval)
                   .getTime();
+
+                repairBotAnimation(machine.id);
 
                 return machine;
               }

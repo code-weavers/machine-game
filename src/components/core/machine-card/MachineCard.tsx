@@ -59,9 +59,11 @@ export const MachineCard = ({ machine }: Props) => {
 
   return (
     <Card
+      id={machine.id}
       shadow="sm"
       padding="sm"
       sx={() => ({
+        position: "relative",
         borderRadius: 16,
         border: `${borderWidth}px solid ${borderColor}}`,
       })}
