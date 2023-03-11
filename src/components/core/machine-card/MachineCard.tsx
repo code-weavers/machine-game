@@ -1,31 +1,46 @@
-import { MachineDomain } from "@/domain/machine.domain";
+import { MachineEntity } from "@/domain/machine.domain";
 import { useGameStore } from "@/store/game";
 import { Button, Card, Image, MultiSelect, Text } from "@mantine/core";
+import { useMemo } from "react";
 
 interface Props {
-  machine: MachineDomain;
+  machine: MachineEntity;
 }
 
 export const MachineCard = ({ machine }: Props) => {
   const repairMachine = useGameStore((selector) => selector.repairMachine);
-
+  const employees = useGameStore((selector) => selector.employees);
+  const machines = useGameStore((selector) => selector.machines);
   const assignEmployees = useGameStore((selector) => selector.assignEmployees);
-  const availableEmployees = useGameStore(
-    (selector) => selector.availableEmployees
-  );
 
-  const Header = () => {
+  const availableEmployees = useMemo(() => {
+    return employees.filter((employee) => {
+      return !machines.some((machine) => {
+        return machine.assignedEmployee.some((e) => e.id === employee.id);
+      });
+    });
+  }, [employees, machines]);
+
+  const header = (() => {
     if (machine.isBroken)
-      return <Button onClick={() => repairMachine(machine.id)}>Repair</Button>;
+      return (
+        <Button
+          onClick={() => {
+            repairMachine(machine.id);
+          }}
+        >
+          Repair
+        </Button>
+      );
 
     if (machine.isIdle) {
       return <div>Need to assign employee</div>;
     }
 
     return null;
-  };
+  })();
 
-  const items = availableEmployees().map((employee) => ({
+  const items = availableEmployees.map((employee) => ({
     label: employee.name,
     value: employee.id,
   }));
@@ -51,7 +66,7 @@ export const MachineCard = ({ machine }: Props) => {
         border: `${borderWidth}px solid ${borderColor}}`,
       })}
     >
-      <Header />
+      {header}
 
       <Image src={machine.image} alt={machine.name} height={150} />
       <Text size="lg" weight={500} style={{ marginTop: "0.5rem" }}>
@@ -103,7 +118,6 @@ export const MachineCard = ({ machine }: Props) => {
       <MultiSelect
         label={`Assign Employees (${machine.assignedEmployee.length}/${machine.employeeSlots})`}
         onChange={(value) => {
-          console.log(value);
           assignEmployees(machine.id, value);
         }}
         multiple

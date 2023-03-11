@@ -1,4 +1,4 @@
-import { MachineDomain } from "@/domain/machine.domain";
+import { MachineEntity } from "@/domain/machine.domain";
 import { MachineFactory } from "@/factory/machine-factory";
 import { Employee } from "@/types/entities/employee";
 import { Land } from "@/types/entities/land";
@@ -34,13 +34,9 @@ interface Store {
   machines: GameMachine[];
   gameSpeedMs: number;
   pollution: number;
-
   repairBots: GameRepairBot[];
-
   employees: Employee[];
-
   setGameSpeedMs: (gameSpeed: number) => void;
-
   buyRepairBot: (repairBot: RepairBot) => void;
   payLandFee: () => void;
   gameTick: () => void;
@@ -48,7 +44,6 @@ interface Store {
   mintEmployee: () => void;
   repairMachine: (machineId: string) => void;
   assignEmployees: (machineId: string, employeeId: string | string[]) => void;
-  availableEmployees: () => Employee[];
   setSelectedLand: (land: Land) => void;
 }
 
@@ -62,11 +57,13 @@ export const useGameStore = create(
   persist<Store>(
     (set, get) => ({
       repairBots: [],
-      money: 500,
+      money: 50000,
       machines: [],
       pollution: 0,
       selectedLand: null,
       gameSpeedMs: 1000,
+      employees: [],
+
       setGameSpeedMs: (gameSpeed) => {
         set({ gameSpeedMs: gameSpeed });
       },
@@ -122,8 +119,8 @@ export const useGameStore = create(
             return state;
           }
 
-          state.money += state.machines.reduce((acc, machine) => {
-            const machineDomain = new MachineDomain(machine);
+          const updatedMachines = state.machines.map((machine) => {
+            const machineDomain = new MachineEntity(machine);
 
             if (machineDomain.isBroken) {
               const foundRepairBot = state.repairBots.find((repairBot) => {
@@ -137,87 +134,89 @@ export const useGameStore = create(
                 const repairValue =
                   foundRepairBot.repairPercentage * machine.durability;
 
-                console.log(repairValue);
-
                 machine.currentDurability += repairValue;
 
                 foundRepairBot.availableAt = dateUtils
                   .addSeconds(new Date(), foundRepairBot.secondsInterval)
                   .getTime();
+
+                return machine;
               }
             }
 
-            if (!machineDomain.isWorking) {
-              return acc;
+            if (machineDomain.isWorking) {
+              machine.currentDurability -= DURABILITY_DRAIN;
+              state.pollution += machineDomain.virtualPollutionProduction;
+              state.money += machineDomain.virtualResourceProduction;
             }
 
-            machine.currentDurability -= DURABILITY_DRAIN;
-
-            state.pollution += machine.pollutionProduction;
-
-            return acc + machineDomain.virtualResourceProduction;
+            return machine;
           }, 0);
 
           return {
             money: state.money,
             pollution: state.pollution,
+            machines: updatedMachines,
           };
         });
       },
 
       mintMachine: () => {
-        if (get().machines.length + 1 > (get().selectedLand?.machineLimit || 0))
+        const { machines, selectedLand, money } = get();
+
+        if (
+          machines.length + 1 > (selectedLand?.machineLimit || 0) ||
+          money < MACHINE_MIN_COST
+        )
           return;
 
-        if (get().money < MACHINE_MIN_COST) {
-          return;
-        }
         set((state) => {
+          const machinesClone = structuredClone(state.machines);
+
           const machineFactory = new MachineFactory(MachineTier.Tier1);
 
           const machine = machineFactory.mintMachine();
 
-          state.machines.push(machine);
+          machinesClone.push(machine);
+
+          const newMoney = state.money - MACHINE_MIN_COST;
 
           return {
-            machines: state.machines,
-            money: state.money - MACHINE_MIN_COST,
+            machines: machinesClone,
+            money: newMoney,
           };
         });
       },
 
-      repairMachine: (machineId: string) => {
+      repairMachine: (machineId) => {
         set((state) => {
-          const machine = state.machines.find((m) => m.id === machineId);
+          const machinesClone = structuredClone(state.machines);
 
-          if (!machine) {
-            return state;
-          }
+          const machineIndex = machinesClone.findIndex(
+            (m) => m.id === machineId
+          );
 
-          const repairCost =
-            (machine.durability - machine.currentDurability) * 1;
+          if (machineIndex < 0) return state;
 
-          if (state.money < repairCost) {
-            return state;
-          }
+          const machineEntity = new MachineEntity(machinesClone[machineIndex]);
 
-          machine.currentDurability = machine.durability;
+          const { money } = machineEntity.repair(state.money);
 
           return {
-            money: state.money - repairCost,
+            money,
+            machines: machinesClone,
           };
         });
       },
-
-      employees: [],
 
       mintEmployee: () => {
-        if (get().money < EMPLOYEE_MIN_COST) {
-          return;
-        }
-
         set((state) => {
+          if (get().money < EMPLOYEE_MIN_COST) {
+            return state;
+          }
           const randomName = randomUtils.generateRandomName();
+
+          const employeesClone = structuredClone(state.employees);
 
           const employee: Employee = {
             id: randomUtils.generateUniqueId(),
@@ -229,46 +228,38 @@ export const useGameStore = create(
             salary: 100,
           };
 
-          state.employees.push(employee);
+          employeesClone.push(employee);
 
           return {
-            employees: state.employees,
+            employees: employeesClone,
             money: state.money - EMPLOYEE_MIN_COST,
           };
         });
       },
 
       assignEmployees: (machineId: string, employeeId: string | string[]) => {
-        const employeeIds = Array.isArray(employeeId)
-          ? employeeId
-          : [employeeId];
-
         set((state) => {
-          const machine = state.machines.find((m) => m.id === machineId);
+          const employeeIds = Array.isArray(employeeId)
+            ? employeeId
+            : [employeeId];
 
-          if (!machine) {
-            return state;
-          }
+          const machineIndex = state.machines.findIndex(
+            (m) => m.id === machineId
+          );
+
+          if (machineIndex < 0) return state;
 
           const employees = state.employees.filter((e) =>
             employeeIds.includes(e.id)
           );
 
-          machine.assignedEmployee = employees;
+          const machinesClone = structuredClone(state.machines);
+
+          machinesClone[machineIndex].assignedEmployee = employees;
 
           return {
-            machines: state.machines,
+            machines: machinesClone,
           };
-        });
-      },
-
-      availableEmployees: () => {
-        const store = get();
-
-        return store.employees.filter((employee) => {
-          return !store.machines.some((machine) => {
-            return machine.assignedEmployee.some((e) => e.id === employee.id);
-          });
         });
       },
     }),

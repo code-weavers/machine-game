@@ -1,7 +1,7 @@
 import { GameMachine } from "@/store/game";
 import { Employee } from "@/types/entities/employee";
 
-export class MachineDomain {
+export class MachineEntity {
   constructor(private machine: GameMachine) {}
 
   get id() {
@@ -95,5 +95,22 @@ export class MachineDomain {
 
   get employeeSlots() {
     return this.machine.employeeSlots;
+  }
+
+  repair(userMoney: number) {
+    const repairCost =
+      (this.machine.durability - this.machine.currentDurability) * 1;
+
+    if (userMoney < repairCost) {
+      return {
+        money: userMoney,
+      };
+    }
+
+    this.machine.currentDurability = this.machine.durability;
+
+    return {
+      money: userMoney - repairCost,
+    };
   }
 }
