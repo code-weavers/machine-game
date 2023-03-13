@@ -4,11 +4,11 @@ import { Card, Center, Title } from "@mantine/core";
 import { GameView } from "../game/GameView";
 
 export const InitialView = () => {
-  const land = useGameStore((select) => select.selectedLand);
+  const land = useGameStore((select) => select.land);
   // todo create game page
-  const selectLand = useGameStore((select) => select.setSelectedLand);
+  const selectLand = useGameStore((select) => select.setLand);
 
-  if (land) return <GameView />;
+  if (land.id) return <GameView />;
 
   return (
     <Center h={"100vh"}>

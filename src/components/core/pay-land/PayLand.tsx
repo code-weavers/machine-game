@@ -4,7 +4,7 @@ import { Button } from "@mantine/core";
 import { useEffect, useState } from "react";
 
 export const PayLand = () => {
-  const selectedLand = useGameStore((select) => select.selectedLand);
+  const selectedLand = useGameStore((select) => select.land);
   const payLandFee = useGameStore((select) => select.payLandFee);
   const [timer, setTimer] = useState(getSeconds());
 

@@ -1,5 +1,8 @@
 import { repairBotAnimation } from "@/animations/repair-bot-animation";
+import { EmployeeEntity } from "@/domain/employee.entity";
+import { LandEntity } from "@/domain/land.entity";
 import { MachineEntity } from "@/domain/machine.domain";
+import { LandFactory } from "@/factory/land-factory";
 import { MachineFactory } from "@/factory/machine-factory";
 import { Employee } from "@/types/entities/employee";
 import { Land } from "@/types/entities/land";
@@ -11,6 +14,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 export type GameLand = Land & {
   nextPaymentDate: number;
+  pollution: number;
 };
 
 export interface GameMachine extends Machine {
@@ -30,11 +34,10 @@ export type GameRepairBot = RepairBot & {
 };
 
 interface Store {
-  selectedLand: GameLand | null;
+  land: GameLand;
   money: number;
   machines: GameMachine[];
   gameSpeedMs: number;
-  pollution: number;
   repairBots: GameRepairBot[];
   employees: Employee[];
   setGameSpeedMs: (gameSpeed: number) => void;
@@ -45,7 +48,7 @@ interface Store {
   mintEmployee: () => void;
   repairMachine: (machineId: string) => void;
   assignEmployees: (machineId: string, employeeId: string | string[]) => void;
-  setSelectedLand: (land: Land) => void;
+  setLand: (land: Land) => void;
 }
 
 const DURABILITY_DRAIN = 5;
@@ -61,7 +64,14 @@ export const useGameStore = create(
       money: 50000,
       machines: [],
       pollution: 0,
-      selectedLand: null,
+      land: {
+        id: "",
+        fee: 0,
+        machineLimit: 0,
+        name: "",
+        pollution: 0,
+        nextPaymentDate: 0,
+      },
       gameSpeedMs: 1000,
       employees: [],
 
@@ -85,40 +95,36 @@ export const useGameStore = create(
 
       payLandFee: () => {
         set((state) => {
-          if (!state.selectedLand || state.money < state.selectedLand.fee) {
-            return state;
-          }
+          const landEntity = new LandEntity(state.land);
 
-          state.money -= state.selectedLand.fee;
+          const userMoney = state.money;
 
-          const nextDate = dateUtils.addSeconds(new Date(), 30);
+          if (!landEntity.isPayable(userMoney)) return state;
 
-          const numberNextDate = nextDate.getTime();
+          const { money } = landEntity.payFee(userMoney);
 
-          state.selectedLand.nextPaymentDate = numberNextDate;
-
-          return state;
+          return {
+            money: money,
+            land: landEntity.getLand(),
+          };
         });
       },
 
-      setSelectedLand(land: Land) {
-        const nextDate = dateUtils.addMinutes(new Date(), 10);
-
-        const numberNextDate = nextDate.getTime();
+      setLand(land: Land) {
+        const createdLand = LandFactory.createLand(land);
 
         set({
-          selectedLand: {
-            ...land,
-            nextPaymentDate: numberNextDate,
-          },
+          land: createdLand,
         });
       },
 
       gameTick: () => {
         set((state) => {
-          if (!state.selectedLand) return state;
+          if (!state.land.id) return state;
 
-          if (state.selectedLand.nextPaymentDate - new Date().getTime() <= 0) {
+          const landEntity = new LandEntity(state.land);
+
+          if (!landEntity.isPaid()) {
             return state;
           }
 
@@ -151,23 +157,39 @@ export const useGameStore = create(
 
             if (machineDomain.isWorking) {
               machine.currentDurability -= DURABILITY_DRAIN;
-              state.pollution += machineDomain.virtualPollutionProduction;
+              landEntity.pollution += machineDomain.virtualPollutionProduction;
               state.money += machineDomain.virtualResourceProduction;
             }
 
             return machine;
           }, 0);
 
+          let updateEmployees: Employee[] = [];
+
+          if (landEntity.isPolluted) {
+            updateEmployees = state.employees.map((employee) => {
+              const employeeEntity = new EmployeeEntity(employee);
+
+              if (employeeEntity.isWorking(updatedMachines)) {
+                employeeEntity.currentHealth -= landEntity.pollutionDamage;
+              }
+              return employeeEntity.getEmployee();
+            });
+          } else {
+            updateEmployees = state.employees;
+          }
+
           return {
             money: state.money,
-            pollution: state.pollution,
+            land: landEntity.getLand(),
+            employees: updateEmployees,
             machines: updatedMachines,
           };
         });
       },
 
       mintMachine: () => {
-        const { machines, selectedLand, money } = get();
+        const { machines, land: selectedLand, money } = get();
 
         if (
           machines.length + 1 > (selectedLand?.machineLimit || 0) ||
@@ -230,6 +252,7 @@ export const useGameStore = create(
             energyMultiplier: 1.1,
             health: 100,
             pollutionMultiplier: 1.1,
+            currentHealth: 100,
             salary: 100,
           };
 

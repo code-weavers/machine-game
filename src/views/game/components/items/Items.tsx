@@ -9,7 +9,7 @@ export const Items = () => {
     <ContentCard>
       <Title color={"white"}>Items</Title>
 
-      <Flex gap="md">
+      <Flex gap="md" wrap="wrap">
         {repairBots.map((repairBot) => (
           <Image
             width={50}

@@ -3,6 +3,7 @@ export type Employee = {
   name: string;
   salary: number;
   health: number;
+  currentHealth: number;
   resourceMultiplier: number;
   pollutionMultiplier: number;
   energyMultiplier: number;

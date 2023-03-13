@@ -6,7 +6,7 @@ import { SimpleGrid, Title } from "@mantine/core";
 
 export const ActiveMachines = () => {
   const machines = useGameStore((s) => s.machines);
-  const selectedLand = useGameStore((s) => s.selectedLand);
+  const selectedLand = useGameStore((s) => s.land);
 
   return (
     <ContentCard>
