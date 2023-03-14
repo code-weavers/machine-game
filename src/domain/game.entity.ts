@@ -23,16 +23,25 @@ export class GameEntity {
   assignEmployees(machineId: string, employeeId: string | string[]) {
     const employeeIds = Array.isArray(employeeId) ? employeeId : [employeeId];
 
-    const updatedMachines = this.machines.map((machine) =>
-      machine.id === machineId
-        ? {
-            ...machine,
-            assignedEmployeesId: employeeIds,
-          }
-        : machine
-    );
+    let oldAssigned: string[] = [];
+
+    const updatedMachines = this.machines.map((machine) => {
+      if (machine.id === machineId) {
+        oldAssigned = machine.assignedEmployeesId;
+        return {
+          ...machine,
+          assignedEmployeesId: employeeIds,
+        };
+      }
+
+      return machine;
+    });
 
     const updatedEmployees = this.employees.map((employee) => {
+      if (oldAssigned.includes(employee.id)) {
+        employee.assignedMachineId = null;
+      }
+
       if (employeeIds.includes(employee.id)) {
         return {
           ...employee,
@@ -65,12 +74,8 @@ export class GameEntity {
         this.employees.map((employee) => new EmployeeEntity(employee))
       );
 
-      if (machineEntity.isBroken) {
-        return machineEntity;
-      }
-
-      if (machineEntity.isIdle) {
-        return machineEntity;
+      if (machineEntity.isBroken || machineEntity.isIdle) {
+        return { ...machineEntity };
       }
 
       if (machineEntity.isWorking) {
@@ -79,10 +84,10 @@ export class GameEntity {
         landEntity.addPollution(generatedPollution);
         this.money += generatedResource;
 
-        return machineEntity;
+        return { ...machineEntity };
       }
 
-      return machineEntity;
+      return { ...machineEntity };
     });
 
     const updatedEmployees = this.employees.map((employee) => {
@@ -92,7 +97,7 @@ export class GameEntity {
         employeeEntity.takePollutionDamage(landEntity.pollution);
       }
 
-      return employeeEntity;
+      return { ...employeeEntity };
     });
 
     return {
@@ -103,6 +108,7 @@ export class GameEntity {
     };
   }
 
+  // TODO implement repair bot
   // const foundRepairBot = state.repairBots.find((repairBot) => {
   //   return (
   //     repairBot.availableAt - new Date().getTime() <= 0 &&

@@ -1,3 +1,4 @@
+import { EmployeeEntity } from "@/domain/employee.entity";
 import { MachineEntity } from "@/domain/machine.entity";
 import { useGameStore } from "@/store/game";
 import { Button, Card, Image, MultiSelect, Text } from "@mantine/core";
@@ -12,11 +13,15 @@ export const MachineCard = ({ machine }: Props) => {
   const employees = useGameStore((selector) => selector.employees);
   const assignEmployees = useGameStore((selector) => selector.assignEmployees);
 
-  const availableEmployees = useMemo(() => {
-    return employees.filter((employee) => {
-      return employee.assignedMachineId !== null;
-    });
-  }, [employees]);
+  const availableEmployees = useMemo(
+    () =>
+      employees.filter((employee) => {
+        const employeeEntity = new EmployeeEntity(employee);
+
+        return employeeEntity.isAvailable;
+      }),
+    [employees]
+  );
 
   const header = (() => {
     if (machine.isBroken)
@@ -53,6 +58,11 @@ export const MachineCard = ({ machine }: Props) => {
       ? "8"
       : "3"
     : "5";
+
+  const assignedEmployees = machine.assignedEmployee.map((e) => ({
+    label: e.name,
+    value: e.id,
+  }));
 
   return (
     <Card
@@ -117,18 +127,13 @@ export const MachineCard = ({ machine }: Props) => {
       <MultiSelect
         label={`Assign Employees (${machine.assignedEmployee.length}/${machine.employeeSlots})`}
         onChange={(value) => {
+          console.log(value);
           assignEmployees(machine.id, value);
         }}
         multiple
         maxSelectedValues={machine.employeeSlots}
         defaultValue={machine.assignedEmployee.map((e) => String(e.id))}
-        data={[
-          ...items,
-          ...machine.assignedEmployee.map((e) => ({
-            label: e.name,
-            value: e.id,
-          })),
-        ]}
+        data={[...items, ...assignedEmployees]}
       />
     </Card>
   );

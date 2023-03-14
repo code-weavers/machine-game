@@ -188,7 +188,7 @@ export const useGameStore = create(
         });
       },
 
-      assignEmployees: (machineId: string, employeeId: string | string[]) => {
+      assignEmployees: (machineId, employeeId) => {
         set((state) => {
           const game = new GameEntity(
             state.employees,

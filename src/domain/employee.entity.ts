@@ -30,4 +30,8 @@ export class EmployeeEntity {
   get isWorking() {
     return !!this.assignedMachineId;
   }
+
+  get isAvailable() {
+    return !this.isWorking;
+  }
 }

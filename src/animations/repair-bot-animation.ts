@@ -3,8 +3,6 @@ export const repairBotAnimation = (machineId: string) => {
 
   if (!machine) return;
 
-  console.log(machine);
-
   const repairBot = document.createElement("div");
 
   repairBot.classList.add("repair-bot");
