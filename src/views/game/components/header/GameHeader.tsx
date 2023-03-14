@@ -2,7 +2,7 @@ import { ValueCard } from "@/components/cards/value-card/ValueCard";
 import { PayLand } from "@/components/core/pay-land/PayLand";
 import { SpeedButton } from "@/components/core/speed-button/SpeedButton";
 import { LandEntity } from "@/domain/land.entity";
-import { MachineEntity } from "@/domain/machine.domain";
+import { MachineEntity } from "@/domain/machine.entity";
 import { useGameStore } from "@/store/game";
 import { Button, Flex } from "@mantine/core";
 

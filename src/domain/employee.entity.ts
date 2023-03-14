@@ -4,12 +4,8 @@ import { Employee } from "@/types/entities/employee";
 export class EmployeeEntity {
   constructor(private employee: Employee) {}
 
-  get currentHealth() {
-    return this.employee.currentHealth;
-  }
-
-  set currentHealth(value: number) {
-    this.employee.currentHealth = value;
+  takePollutionDamage(pollution: number) {
+    this.employee.currentHealth -= pollution;
   }
 
   isWorking(machines: GameMachine[]) {

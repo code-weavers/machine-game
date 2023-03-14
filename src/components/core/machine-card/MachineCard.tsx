@@ -1,4 +1,4 @@
-import { MachineEntity } from "@/domain/machine.domain";
+import { MachineEntity } from "@/domain/machine.entity";
 import { useGameStore } from "@/store/game";
 import { Button, Card, Image, MultiSelect, Text } from "@mantine/core";
 import { useMemo } from "react";

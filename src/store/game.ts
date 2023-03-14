@@ -1,7 +1,7 @@
 import { repairBotAnimation } from "@/animations/repair-bot-animation";
 import { EmployeeEntity } from "@/domain/employee.entity";
 import { LandEntity } from "@/domain/land.entity";
-import { MachineEntity } from "@/domain/machine.domain";
+import { MachineEntity } from "@/domain/machine.entity";
 import { LandFactory } from "@/factory/land-factory";
 import { MachineFactory } from "@/factory/machine-factory";
 import { Employee } from "@/types/entities/employee";
@@ -128,6 +128,8 @@ export const useGameStore = create(
             return state;
           }
 
+          const updatedEmployees = structuredClone(state.employees);
+
           const updatedMachines = state.machines.map((machine) => {
             const machineDomain = new MachineEntity(machine);
 
@@ -159,30 +161,36 @@ export const useGameStore = create(
               machine.currentDurability -= DURABILITY_DRAIN;
               landEntity.pollution += machineDomain.virtualPollutionProduction;
               state.money += machineDomain.virtualResourceProduction;
+
+              if (landEntity.isPolluted) {
+                machineDomain.assignedEmployee =
+                  machineDomain.assignedEmployee.map((employee) => {
+                    const employeeDomain = new EmployeeEntity(employee);
+
+                    employeeDomain.takePollutionDamage(landEntity.pollution);
+
+                    const newEmployeeValue = employeeDomain.getEmployee();
+
+                    const employeeIndex = updatedEmployees.findIndex(
+                      (employee) => employee.id === newEmployeeValue.id
+                    );
+
+                    if (employeeIndex !== -1) {
+                      updatedEmployees[employeeIndex] = newEmployeeValue;
+                    }
+
+                    return newEmployeeValue;
+                  });
+              }
             }
 
             return machine;
-          }, 0);
-
-          let updateEmployees: Employee[] = [];
-
-          if (landEntity.isPolluted) {
-            updateEmployees = state.employees.map((employee) => {
-              const employeeEntity = new EmployeeEntity(employee);
-
-              if (employeeEntity.isWorking(updatedMachines)) {
-                employeeEntity.currentHealth -= landEntity.pollutionDamage;
-              }
-              return employeeEntity.getEmployee();
-            });
-          } else {
-            updateEmployees = state.employees;
-          }
+          });
 
           return {
             money: state.money,
             land: landEntity.getLand(),
-            employees: updateEmployees,
+            employees: updatedEmployees,
             machines: updatedMachines,
           };
         });

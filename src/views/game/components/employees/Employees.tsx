@@ -43,8 +43,9 @@ export const Employees = () => {
           maxHeight: 150,
           overflowY: "scroll",
         }}
-        cols={6}
+        cols={5}
         mt="md"
+        spacing={"md"}
       >
         {items.map((employee) => (
           <Tooltip
@@ -56,7 +57,9 @@ export const Employees = () => {
                 }}
               >
                 <List.Item>{employee.name}</List.Item>
-                <List.Item>{employee.health}💗</List.Item>
+                <List.Item>
+                  {employee.currentHealth}/{employee.health}💗
+                </List.Item>
                 <List.Item>{employee.pollutionMultiplier} ☠</List.Item>
                 <List.Item>{employee.resourceMultiplier} 💰</List.Item>
                 <List.Item>{employee.energyMultiplier}☀</List.Item>
@@ -75,6 +78,13 @@ export const Employees = () => {
             >
               <Avatar src={`https://i.pravatar.cc/300?u=${employee.name}`} />
               <span>{employee.name}</span>
+              <progress
+                style={{
+                  width: 50,
+                }}
+                value={employee.currentHealth}
+                max={employee.health}
+              />
             </div>
           </Tooltip>
         ))}

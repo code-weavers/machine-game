@@ -1,6 +1,6 @@
 import { ContentCard } from "@/components/cards/content-card/ContentCard";
 import { MachineCard } from "@/components/core/machine-card/MachineCard";
-import { MachineEntity } from "@/domain/machine.domain";
+import { MachineEntity } from "@/domain/machine.entity";
 import { useGameStore } from "@/store/game";
 import { SimpleGrid, Title } from "@mantine/core";
 

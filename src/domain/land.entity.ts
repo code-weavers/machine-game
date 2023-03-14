@@ -8,8 +8,28 @@ export class LandEntity {
     return this.land.id;
   }
 
+  get name() {
+    return this.land.name;
+  }
+
+  get pollution() {
+    return this.land.pollution;
+  }
+
+  set pollution(value: number) {
+    this.land.pollution = value;
+  }
+
+  get isPolluted() {
+    return this.land.pollution >= 1000;
+  }
+
+  get pollutionDamage() {
+    return this.land.pollution / 1000;
+  }
+
   isPayable(userMoney: number) {
-    if (!this.land.id) return false;
+    if (!this.id) return false;
 
     return userMoney >= this.land.fee;
   }
@@ -30,26 +50,6 @@ export class LandEntity {
     const remainingTime = this.land.nextPaymentDate - new Date().getTime();
 
     return remainingTime > 0;
-  }
-
-  get name() {
-    return this.land.name;
-  }
-
-  get pollution() {
-    return this.land.pollution;
-  }
-
-  set pollution(value: number) {
-    this.land.pollution = value;
-  }
-
-  get isPolluted() {
-    return this.land.pollution >= 1000;
-  }
-
-  get pollutionDamage() {
-    return this.land.pollution / 1000;
   }
 
   getLand() {
