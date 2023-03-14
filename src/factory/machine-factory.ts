@@ -35,19 +35,22 @@ export class MachineFactory {
 
   public mintMachine(): MachineEntity {
     const durability = this.getDurability();
-    return new MachineEntity({
-      id: randomUtils.generateUniqueId(),
-      durability: durability,
-      energyCost: this.getEnergyCost(),
-      pollutionProduction: this.getPollutionProduction(),
-      resourceProduction: this.getResourceProduction(),
-      image: "https://picsum.photos/200",
-      name: "Machine 1",
-      employeeSlots: this.machineTier * 2,
-      tier: this.machineTier,
-      assignedEmployee: [],
-      currentDurability: durability,
-      type: MachineType.Press,
-    });
+    return new MachineEntity(
+      {
+        id: randomUtils.generateUniqueId(),
+        durability: durability,
+        energyCost: this.getEnergyCost(),
+        pollutionProduction: this.getPollutionProduction(),
+        resourceProduction: this.getResourceProduction(),
+        image: "https://picsum.photos/200",
+        name: "Machine 1",
+        employeeSlots: this.machineTier * 2,
+        tier: this.machineTier,
+        currentDurability: durability,
+        assignedEmployeesId: [],
+        type: MachineType.Press,
+      },
+      []
+    );
   }
 }

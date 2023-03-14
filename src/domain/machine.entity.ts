@@ -1,6 +1,6 @@
-import { Employee } from "@/types/entities/employee";
 import { Machine, MachineTier, MachineType } from "@/types/entities/machine";
-
+import { EmployeeEntity } from "./employee.entity";
+const DURABILITY_DRAIN = 5;
 export class MachineEntity {
   public id: string;
   public name: string;
@@ -13,9 +13,10 @@ export class MachineEntity {
   public type: MachineType;
   public tier: MachineTier;
   public currentDurability: number;
-  public assignedEmployee: Employee[];
+  public assignedEmployeesId: string[] = [];
+  private employees: EmployeeEntity[];
 
-  constructor(machine: Machine) {
+  constructor(machine: Machine, employees: EmployeeEntity[]) {
     this.id = machine.id;
     this.name = machine.name;
     this.image = machine.image;
@@ -27,15 +28,14 @@ export class MachineEntity {
     this.type = machine.type;
     this.tier = machine.tier;
     this.currentDurability = machine.currentDurability;
-    this.assignedEmployee = machine.assignedEmployee;
+    this.assignedEmployeesId = machine.assignedEmployeesId || [];
+    this.employees = employees || [];
   }
 
-  assignEmployee(value: Employee[]) {
-    if (value.length > this.employeeSlots) {
-      return;
-    }
-
-    this.assignedEmployee = value || [];
+  get assignedEmployee() {
+    return this.assignedEmployeesId
+      .map((id) => this.employees.find((employee) => employee.id === id))
+      .filter(Boolean) as EmployeeEntity[];
   }
 
   get virtualResourceProduction() {
@@ -68,8 +68,7 @@ export class MachineEntity {
   }
 
   get isIdle() {
-    console.log(this.assignedEmployee.length);
-    return this.assignedEmployee.length <= 0 && !this.isBroken;
+    return this.assignedEmployeesId.length <= 0 && !this.isBroken;
   }
 
   get isWorking() {
@@ -93,6 +92,21 @@ export class MachineEntity {
 
     return {
       money: userMoney - repairCost,
+    };
+  }
+
+  work() {
+    this.currentDurability -= DURABILITY_DRAIN;
+
+    return {
+      generatedResource: this.virtualResourceProduction,
+      generatedPollution: this.virtualPollutionProduction,
+    };
+  }
+
+  toMachine(): Machine {
+    return {
+      ...this,
     };
   }
 }

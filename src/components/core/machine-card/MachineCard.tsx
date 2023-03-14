@@ -10,16 +10,13 @@ interface Props {
 export const MachineCard = ({ machine }: Props) => {
   const repairMachine = useGameStore((selector) => selector.repairMachine);
   const employees = useGameStore((selector) => selector.employees);
-  const machines = useGameStore((selector) => selector.machines);
   const assignEmployees = useGameStore((selector) => selector.assignEmployees);
 
   const availableEmployees = useMemo(() => {
     return employees.filter((employee) => {
-      return !machines.some((machine) => {
-        return machine.assignedEmployee.some((e) => e.id === employee.id);
-      });
+      return employee.assignedMachineId !== null;
     });
-  }, [employees, machines]);
+  }, [employees]);
 
   const header = (() => {
     if (machine.isBroken)

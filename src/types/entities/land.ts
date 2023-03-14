@@ -3,4 +3,6 @@ export type Land = {
   name: string;
   fee: number;
   machineLimit: number;
+  nextPaymentDate: number;
+  pollution: number;
 };

@@ -1,37 +1,39 @@
-import { GameLand } from "@/store/game";
+import { Land } from "@/types/entities/land";
 import { dateUtils } from "@/utils/date";
 
 export class LandEntity {
-  constructor(private land: GameLand) {}
+  public id: string;
+  public name: string;
+  public fee: number;
+  public machineLimit: number;
+  public nextPaymentDate: number;
+  public pollution: number;
 
-  get id() {
-    return this.land.id;
-  }
-
-  get name() {
-    return this.land.name;
-  }
-
-  get pollution() {
-    return this.land.pollution;
-  }
-
-  set pollution(value: number) {
-    this.land.pollution = value;
+  constructor(land: Land) {
+    this.id = land.id;
+    this.name = land.name;
+    this.fee = land.fee;
+    this.machineLimit = land.machineLimit;
+    this.nextPaymentDate = land.nextPaymentDate;
+    this.pollution = land.pollution;
   }
 
   get isPolluted() {
-    return this.land.pollution >= 1000;
+    return this.pollution >= 1000;
   }
 
   get pollutionDamage() {
-    return this.land.pollution / 1000;
+    return this.pollution / 1000;
+  }
+
+  addPollution(pollution: number) {
+    this.pollution += pollution;
   }
 
   isPayable(userMoney: number) {
     if (!this.id) return false;
 
-    return userMoney >= this.land.fee;
+    return userMoney >= this.fee;
   }
 
   payFee(userMoney: number) {
@@ -39,20 +41,16 @@ export class LandEntity {
 
     const numberNextDate = nextDate.getTime();
 
-    this.land.nextPaymentDate = numberNextDate;
+    this.nextPaymentDate = numberNextDate;
 
     return {
-      money: userMoney - this.land.fee,
+      money: userMoney - this.fee,
     };
   }
 
   isPaid() {
-    const remainingTime = this.land.nextPaymentDate - new Date().getTime();
+    const remainingTime = this.nextPaymentDate - new Date().getTime();
 
     return remainingTime > 0;
-  }
-
-  getLand() {
-    return this.land;
   }
 }

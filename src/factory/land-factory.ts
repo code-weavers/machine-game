@@ -1,4 +1,4 @@
-import { GameLand } from "@/store/game";
+import { randomUtils } from "./../utils/random/index";
 import { Land } from "@/types/entities/land";
 import { dateUtils } from "@/utils/date";
 
@@ -11,7 +11,18 @@ export class LandFactory {
     return numberNextDate;
   }
 
-  static createLand(land: Land): GameLand {
+  static mint(): Land {
+    return {
+      fee: 0,
+      id: randomUtils.generateUniqueId(),
+      machineLimit: 10,
+      name: "land",
+      nextPaymentDate: this.getInitialPaymentDate(),
+      pollution: 0,
+    };
+  }
+
+  static createLand(land: Land): Land {
     return {
       id: land.id,
       fee: land.fee,

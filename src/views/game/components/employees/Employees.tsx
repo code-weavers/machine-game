@@ -16,16 +16,8 @@ export const Employees = () => {
 
   const employees = useGameStore((s) => s.employees);
 
-  const machines = useGameStore((s) => s.machines);
-
-  const allWorkingEmployeesIds = machines
-    .flatMap((machine) => machine.assignedEmployee)
-    .map((employee) => employee.id);
-
   const items = working
-    ? employees.filter((employee) =>
-        allWorkingEmployeesIds.includes(employee.id)
-      )
+    ? employees.filter((employee) => employee.assignedMachineId !== null)
     : employees;
 
   return (

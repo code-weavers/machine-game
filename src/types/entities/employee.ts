@@ -7,4 +7,5 @@ export type Employee = {
   resourceMultiplier: number;
   pollutionMultiplier: number;
   energyMultiplier: number;
+  assignedMachineId: string | null;
 };

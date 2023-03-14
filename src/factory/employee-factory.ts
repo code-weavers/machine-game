@@ -14,6 +14,7 @@ export class EmployeeFactory {
       pollutionMultiplier: 1.1,
       currentHealth: 100,
       salary: 100,
+      assignedMachineId: null,
     };
   }
 }

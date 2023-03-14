@@ -1,4 +1,3 @@
-import { repairBotAnimation } from "@/animations/repair-bot-animation";
 import { EmployeeEntity } from "@/domain/employee.entity";
 import { LandEntity } from "@/domain/land.entity";
 import { MachineEntity } from "@/domain/machine.entity";
@@ -8,14 +7,9 @@ import { MachineFactory } from "@/factory/machine-factory";
 import { Employee } from "@/types/entities/employee";
 import { Land } from "@/types/entities/land";
 import { Machine, MachineTier } from "@/types/entities/machine";
-import { dateUtils } from "@/utils/date";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-
-export type GameLand = Land & {
-  nextPaymentDate: number;
-  pollution: number;
-};
+import { GameEntity } from "./../domain/game.entity";
 
 export type RepairBot = {
   id: string;
@@ -29,13 +23,11 @@ export type GameRepairBot = RepairBot & {
 };
 
 interface Store {
-  land: GameLand;
+  land: Land;
   money: number;
   machines: Machine[];
-  gameSpeedMs: number;
   repairBots: GameRepairBot[];
   employees: Employee[];
-  setGameSpeedMs: (gameSpeed: number) => void;
   buyRepairBot: (repairBot: RepairBot) => void;
   payLandFee: () => void;
   gameTick: () => void;
@@ -45,8 +37,6 @@ interface Store {
   assignEmployees: (machineId: string, employeeId: string | string[]) => void;
   setLand: (land: Land) => void;
 }
-
-const DURABILITY_DRAIN = 5;
 
 const MACHINE_MIN_COST = 300;
 
@@ -66,13 +56,7 @@ export const useGameStore = create(
         pollution: 0,
         nextPaymentDate: 0,
       },
-      gameSpeedMs: 1000,
       employees: [],
-
-      setGameSpeedMs: (gameSpeed) => {
-        set({ gameSpeedMs: gameSpeed });
-      },
-
       buyRepairBot: (repairBot) => {
         set((state) => {
           return {
@@ -99,7 +83,7 @@ export const useGameStore = create(
 
           return {
             money: money,
-            land: landEntity.getLand(),
+            land: landEntity,
           };
         });
       },
@@ -114,78 +98,20 @@ export const useGameStore = create(
 
       gameTick: () => {
         set((state) => {
-          if (!state.land.id) return state;
+          const gameEntity = new GameEntity(
+            state.employees,
+            state.land,
+            state.machines,
+            state.money
+          );
 
-          const landEntity = new LandEntity(state.land);
-
-          if (!landEntity.isPaid()) {
-            return state;
-          }
-
-          const updatedEmployees = structuredClone(state.employees);
-
-          const updatedMachines = state.machines.map((machine) => {
-            const machineDomain = new MachineEntity(machine);
-
-            if (machineDomain.isBroken) {
-              const foundRepairBot = state.repairBots.find((repairBot) => {
-                return (
-                  repairBot.availableAt - new Date().getTime() <= 0 &&
-                  machineDomain.isBroken
-                );
-              });
-
-              if (foundRepairBot) {
-                const repairValue =
-                  foundRepairBot.repairPercentage * machine.durability;
-
-                machine.currentDurability += repairValue;
-
-                foundRepairBot.availableAt = dateUtils
-                  .addSeconds(new Date(), foundRepairBot.secondsInterval)
-                  .getTime();
-
-                repairBotAnimation(machine.id);
-
-                return machine;
-              }
-            }
-
-            if (machineDomain.isWorking) {
-              machine.currentDurability -= DURABILITY_DRAIN;
-              landEntity.pollution += machineDomain.virtualPollutionProduction;
-              state.money += machineDomain.virtualResourceProduction;
-
-              if (landEntity.isPolluted) {
-                machineDomain.assignedEmployee =
-                  machineDomain.assignedEmployee.map((employee) => {
-                    const employeeDomain = new EmployeeEntity(employee);
-
-                    employeeDomain.takePollutionDamage(landEntity.pollution);
-
-                    const newEmployeeValue = employeeDomain.getEmployee();
-
-                    const employeeIndex = updatedEmployees.findIndex(
-                      (employee) => employee.id === newEmployeeValue.id
-                    );
-
-                    if (employeeIndex !== -1) {
-                      updatedEmployees[employeeIndex] = newEmployeeValue;
-                    }
-
-                    return newEmployeeValue;
-                  });
-              }
-            }
-
-            return machine;
-          });
+          const { machines, money, land, employees } = gameEntity.tick();
 
           return {
-            money: state.money,
-            land: landEntity.getLand(),
-            employees: updatedEmployees,
-            machines: updatedMachines,
+            money,
+            land,
+            machines,
+            employees,
           };
         });
       },
@@ -227,7 +153,10 @@ export const useGameStore = create(
 
           if (machineIndex < 0) return state;
 
-          const machineEntity = new MachineEntity(machinesClone[machineIndex]);
+          const machineEntity = new MachineEntity(
+            machinesClone[machineIndex],
+            state.employees.map((e) => new EmployeeEntity(e))
+          );
 
           const { money } = machineEntity.repair(state.money);
 
@@ -261,26 +190,21 @@ export const useGameStore = create(
 
       assignEmployees: (machineId: string, employeeId: string | string[]) => {
         set((state) => {
-          const employeeIds = Array.isArray(employeeId)
-            ? employeeId
-            : [employeeId];
-
-          const machineIndex = state.machines.findIndex(
-            (m) => m.id === machineId
+          const game = new GameEntity(
+            state.employees,
+            state.land,
+            state.machines,
+            state.money
           );
 
-          if (machineIndex < 0) return state;
-
-          const employees = state.employees.filter((e) =>
-            employeeIds.includes(e.id)
+          const { employees, machines } = game.assignEmployees(
+            machineId,
+            employeeId
           );
-
-          const machinesClone = structuredClone(state.machines);
-
-          machinesClone[machineIndex].assignedEmployee = employees;
 
           return {
-            machines: machinesClone,
+            employees,
+            machines,
           };
         });
       },
