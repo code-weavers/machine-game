@@ -17,11 +17,6 @@ export type GameLand = Land & {
   pollution: number;
 };
 
-export interface GameMachine extends Machine {
-  currentDurability: number;
-  assignedEmployee: Employee[];
-}
-
 export type RepairBot = {
   id: string;
   name: string;
@@ -36,7 +31,7 @@ export type GameRepairBot = RepairBot & {
 interface Store {
   land: GameLand;
   money: number;
-  machines: GameMachine[];
+  machines: Machine[];
   gameSpeedMs: number;
   repairBots: GameRepairBot[];
   employees: Employee[];
@@ -63,7 +58,6 @@ export const useGameStore = create(
       repairBots: [],
       money: 50000,
       machines: [],
-      pollution: 0,
       land: {
         id: "",
         fee: 0,
@@ -236,6 +230,8 @@ export const useGameStore = create(
           const machineEntity = new MachineEntity(machinesClone[machineIndex]);
 
           const { money } = machineEntity.repair(state.money);
+
+          machinesClone[machineIndex] = machineEntity;
 
           return {
             money,

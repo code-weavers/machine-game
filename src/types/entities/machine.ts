@@ -1,3 +1,5 @@
+import { Employee } from "./employee";
+
 export enum MachineType {
   Drill,
   Saw,
@@ -15,13 +17,12 @@ export type Machine = {
   name: string;
   image: string;
   durability: number;
-
   energyCost: number;
   pollutionProduction: number;
   employeeSlots: number;
-
   resourceProduction: number;
+  currentDurability: number;
+  assignedEmployee: Employee[];
   type: MachineType;
-
   tier: MachineTier;
 };

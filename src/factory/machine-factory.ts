@@ -1,4 +1,4 @@
-import { GameMachine } from "@/store/game";
+import { MachineEntity } from "@/domain/machine.entity";
 import { MachineTier, MachineType } from "@/types/entities/machine";
 import { randomUtils } from "@/utils/random";
 
@@ -33,22 +33,21 @@ export class MachineFactory {
     return randomUtils.getRandomNumber(min, max);
   }
 
-  public mintMachine(): GameMachine {
+  public mintMachine(): MachineEntity {
     const durability = this.getDurability();
-
-    return {
+    return new MachineEntity({
       id: randomUtils.generateUniqueId(),
-      currentDurability: durability,
       durability: durability,
       energyCost: this.getEnergyCost(),
       pollutionProduction: this.getPollutionProduction(),
       resourceProduction: this.getResourceProduction(),
       image: "https://picsum.photos/200",
       name: "Machine 1",
-      assignedEmployee: [],
       employeeSlots: this.machineTier * 2,
       tier: this.machineTier,
+      assignedEmployee: [],
+      currentDurability: durability,
       type: MachineType.Press,
-    };
+    });
   }
 }
