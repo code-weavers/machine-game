@@ -2,13 +2,13 @@ import { repairBotAnimation } from "@/animations/repair-bot-animation";
 import { EmployeeEntity } from "@/domain/employee.entity";
 import { LandEntity } from "@/domain/land.entity";
 import { MachineEntity } from "@/domain/machine.entity";
+import { EmployeeFactory } from "@/factory/employee-factory";
 import { LandFactory } from "@/factory/land-factory";
 import { MachineFactory } from "@/factory/machine-factory";
 import { Employee } from "@/types/entities/employee";
 import { Land } from "@/types/entities/land";
 import { Machine, MachineTier } from "@/types/entities/machine";
 import { dateUtils } from "@/utils/date";
-import { randomUtils } from "@/utils/random";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -245,20 +245,10 @@ export const useGameStore = create(
           if (get().money < EMPLOYEE_MIN_COST) {
             return state;
           }
-          const randomName = randomUtils.generateRandomName();
+
+          const employee = new EmployeeFactory().mint();
 
           const employeesClone = structuredClone(state.employees);
-
-          const employee: Employee = {
-            id: randomUtils.generateUniqueId(),
-            name: randomName,
-            resourceMultiplier: 1.1,
-            energyMultiplier: 1.1,
-            health: 100,
-            pollutionMultiplier: 1.1,
-            currentHealth: 100,
-            salary: 100,
-          };
 
           employeesClone.push(employee);
 
